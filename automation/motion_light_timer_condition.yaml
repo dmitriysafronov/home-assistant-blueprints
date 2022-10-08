@@ -49,6 +49,11 @@ trigger:
       - !input entity_target
     id: light
 
+condition:
+  - condition: state
+    entity_id: !input entity_condition
+    state: "on"
+
 action:
   - choose:
       - conditions:
