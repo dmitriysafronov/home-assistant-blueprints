@@ -10,6 +10,7 @@ blueprint:
         entity:
           domain: binary_sensor
           device_class: motion
+          multiple: false
     entity_condition:
       name: Condition
       selector:
@@ -17,17 +18,20 @@ blueprint:
           domain:
             - binary_sensor
             - input_boolean
+          multiple: false
     entity_target:
       name: Light
       selector:
         entity:
           domain: light
+          multiple: false
     timer_no_motion:
       name: Wait timer
       description: Time to leave the light on after last motion is detected.
       selector:
         entity:
           domain: timer
+          multiple: false
 
 # If motion is detected within the delay,
 # we restart the script.
@@ -63,6 +67,10 @@ action:
           - service: light.turn_off
             target:
               entity_id: !input entity_target
+          - service: logbook.log
+            data_template:
+              name: "Blueprint #"
+              message: "Condition: trigger - timer finished; Action: light turned off"
       - conditions:
           - condition: trigger
             id: motion
@@ -73,34 +81,24 @@ action:
           - service: light.turn_on
             target:
               entity_id: !input entity_target
-          - service: timer.cancel
-            target:
-              entity_id: !input timer_no_motion
-      - conditions:
-          - condition: trigger
-            id: motion
-          - condition: state
-            entity_id: !input entity_trigger
-            state: "off"
-          - condition: state
-            entity_id: !input entity_target
-            state: "on"
-        sequence:
-          - service: timer.start
-            target:
-              entity_id: !input timer_no_motion
+          - service: logbook.log
+            data_template:
+              name: "Blueprint #"
+              message: "Condition: trigger - motion started; Action: light turned on."
       - conditions:
           - condition: trigger
             id: light
           - condition: state
             entity_id: !input entity_target
             state: "on"
-          - condition: template
-            value_template: "{{ trigger.to_state.context.parent_id == none }}"
         sequence:
           - service: timer.start
             target:
               entity_id: !input timer_no_motion
+          - service: logbook.log
+            data_template:
+              name: "Blueprint #"
+              message: "Condition: trigger - light started; Action: timer started"
       - conditions:
           - condition: trigger
             id: light
@@ -111,3 +109,7 @@ action:
           - service: timer.cancel
             target:
               entity_id: !input timer_no_motion
+          - service: logbook.log
+            data_template:
+              name: "Blueprint #"
+              message: "Condition: trigger - light stopped; Action: timer cancelled"
