@@ -77,6 +77,9 @@ action:
           - condition: state
             entity_id: !input entity_trigger
             state: "on"
+          - condition: state
+            entity_id: !input entity_target
+            state: "off"
         sequence:
           - service: light.turn_on
             target:
@@ -84,7 +87,24 @@ action:
           - service: logbook.log
             data_template:
               name: "Blueprint #"
-              message: "Condition: trigger - motion started; Action: light turned on."
+              message: "Condition: trigger - motion started at dark; Action: light turned on."
+      - conditions:
+          - condition: trigger
+            id: motion
+          - condition: state
+            entity_id: !input entity_trigger
+            state: "on"
+          - condition: state
+            entity_id: !input entity_target
+            state: "on"
+        sequence:
+          - service: timer.cancel
+            target:
+              entity_id: !input timer_no_motion
+          - service: logbook.log
+            data_template:
+              name: "Blueprint #"
+              message: "Condition: trigger - motion started at light; Action: timer cancelled."
       - conditions:
           - condition: trigger
             id: motion
