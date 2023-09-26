@@ -36,20 +36,20 @@ blueprint:
       selector:
         entity:
           domain: light
-        multiple: false
+          multiple: false
     timer_cooldown:
       name: Wait timer
       description: 'Time to leave the light on after binary sensor becomes "false"'
       selector:
         entity:
           domain: timer
-        multiple: false
+          multiple: false
     entity_light_main:
       name: Main Light
       selector:
         entity:
           domain: light
-        multiple: false
+          multiple: false
 
 # If binary is detected within the delay,
 # we restart the script.
