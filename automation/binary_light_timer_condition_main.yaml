@@ -19,7 +19,7 @@ blueprint:
             - input_boolean
           multiple: false
     entity_target:
-      name: Motion Light
+      name: Light
       selector:
         entity:
           domain: light
@@ -38,7 +38,7 @@ blueprint:
           domain: light
           multiple: false
 
-# If motion is detected within the delay,
+# If binary is detected within the delay,
 # we restart the script.
 mode: restart
 max_exceeded: silent
@@ -52,7 +52,7 @@ trigger:
   - platform: state
     entity_id:
       - !input entity_trigger
-    id: motion
+    id: binary
   - platform: state
     entity_id:
       - !input entity_target
@@ -78,7 +78,7 @@ action:
               entity_id: !input entity_target
       - conditions:
           - condition: trigger
-            id: motion
+            id: binary
           - condition: state
             entity_id: !input entity_trigger
             state: "on"
@@ -94,7 +94,7 @@ action:
               entity_id: !input timer_cooldown
       - conditions:
           - condition: trigger
-            id: motion
+            id: binary
           - condition: state
             entity_id: !input entity_trigger
             state: "off"
