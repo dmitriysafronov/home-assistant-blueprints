@@ -1,0 +1,177 @@
+blueprint:
+  name: '"Binary sensor"-activated Light with Timer, Condition, Illuminance and Main Light'
+  description: Turn on a light when binary sensor is "true" and turn it off when "cooldown" timer finishes on specific condifion on specific illuminance or main light enabled'
+  domain: automation
+  source_url: https://github.com/DmitriySafronov/home-assistant_blueprints/blob/master/automation/binary_light_timer_condition_illuminance_main.yaml
+  input:
+    entity_trigger:
+      name: Binary Sensor
+      selector:
+        entity:
+          domain: binary_sensor
+          multiple: false
+    entity_illuminance:
+      name: Illuminance Sensor
+      selector:
+        entity:
+          domain: sensor
+          device_class: illuminance
+          multiple: false
+    entity_illuminance_value:
+      name: Illuminance Value
+      selector:
+        entity:
+          domain: input_number
+          multiple: false
+    entity_condition:
+      name: Condition
+      selector:
+        entity:
+          domain:
+            - binary_sensor
+            - input_boolean
+          multiple: false
+    entity_target:
+      name: Light
+      selector:
+        entity:
+          domain: light
+        multiple: false
+    timer_cooldown:
+      name: Wait timer
+      description: 'Time to leave the light on after binary sensor becomes "false"'
+      selector:
+        entity:
+          domain: timer
+        multiple: false
+    entity_light_main:
+      name: Main Light
+      selector:
+        entity:
+          domain: light
+        multiple: false
+
+# If binary is detected within the delay,
+# we restart the script.
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: !input timer_cooldown
+    id: timer
+  - platform: state
+    entity_id:
+      - !input entity_trigger
+    id: binary
+  - platform: state
+    entity_id:
+      - !input entity_target
+    id: light
+  - platform: state
+    entity_id:
+      - !input entity_light_main
+    id: light_main
+
+condition:
+  - condition: state
+    entity_id: !input entity_condition
+    state: "on"
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: timer
+        sequence:
+          - service: light.turn_off
+            target:
+              entity_id: !input entity_target
+      - conditions:
+          - condition: trigger
+            id: binary
+          - condition: state
+            entity_id: !input entity_trigger
+            state: "on"
+          - condition: state
+            entity_id: !input entity_target
+            state: "off"
+          - condition: numeric_state
+            entity_id: !input entity_illuminance
+            below: !input entity_illuminance_value
+          - condition: state
+            entity_id: !input entity_light_main
+            state: "off"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input entity_target
+      - conditions:
+          - condition: trigger
+            id: binary
+          - condition: state
+            entity_id: !input entity_trigger
+            state: "on"
+          - condition: state
+            entity_id: !input entity_target
+            state: "on"
+          - condition: state
+            entity_id: !input entity_light_main
+            state: "off"
+        sequence:
+          - service: timer.cancel
+            target:
+              entity_id: !input timer_cooldown
+      - conditions:
+          - condition: trigger
+            id: binary
+          - condition: state
+            entity_id: !input entity_trigger
+            state: "off"
+          - condition: state
+            entity_id: !input entity_target
+            state: "on"
+          - condition: state
+            entity_id: !input entity_light_main
+            state: "off"
+        sequence:
+          - service: timer.start
+            target:
+              entity_id: !input timer_cooldown
+      # - conditions:
+      #     - condition: trigger
+      #       id: light
+      #     - condition: state
+      #       entity_id: !input entity_target
+      #       state: "on"
+      #     - condition: template
+      #       value_template: "{{ trigger.to_state.context.parent_id == none }}"
+      #   sequence:
+      #     - service: timer.start
+      #       target:
+      #         entity_id: !input timer_cooldown
+      - conditions:
+          - condition: trigger
+            id: light
+          - condition: state
+            entity_id: !input entity_target
+            state: "off"
+        sequence:
+          - service: timer.cancel
+            target:
+              entity_id: !input timer_cooldown
+      - conditions:
+          - condition: trigger
+            id: light_main
+          - condition: state
+            entity_id: !input entity_light_main
+            state: "on"
+        sequence:
+          - service: light.turn_off
+            target:
+              entity_id: !input entity_target
+          - service: timer.cancel
+            target:
+              entity_id: !input timer_cooldown
