@@ -67,10 +67,6 @@ action:
           - service: light.turn_off
             target:
               entity_id: !input entity_target
-          - service: logbook.log
-            data_template:
-              name: "Blueprint #"
-              message: "Condition: trigger - timer finished; Action: light turned off"
       - conditions:
           - condition: trigger
             id: motion
@@ -84,10 +80,6 @@ action:
           - service: light.turn_on
             target:
               entity_id: !input entity_target
-          - service: logbook.log
-            data_template:
-              name: "Blueprint #"
-              message: "Condition: trigger - motion started at dark; Action: light turned on."
       - conditions:
           - condition: trigger
             id: motion
@@ -101,10 +93,6 @@ action:
           - service: timer.cancel
             target:
               entity_id: !input timer_no_motion
-          - service: logbook.log
-            data_template:
-              name: "Blueprint #"
-              message: "Condition: trigger - motion started at light; Action: timer cancelled."
       - conditions:
           - condition: trigger
             id: motion
@@ -118,10 +106,6 @@ action:
           - service: timer.start
             target:
               entity_id: !input timer_no_motion
-          - service: logbook.log
-            data_template:
-              name: "Blueprint #"
-              message: "Condition: trigger - motion stopped at light; Action: timer started."
       - conditions:
           - condition: trigger
             id: light
@@ -134,10 +118,6 @@ action:
           - service: timer.start
             target:
               entity_id: !input timer_no_motion
-          - service: logbook.log
-            data_template:
-              name: "Blueprint #"
-              message: "Condition: trigger - light started manually; Action: timer started."
       - conditions:
           - condition: trigger
             id: light
@@ -148,7 +128,3 @@ action:
           - service: timer.cancel
             target:
               entity_id: !input timer_no_motion
-          - service: logbook.log
-            data_template:
-              name: "Blueprint #"
-              message: "Condition: trigger - light stopped; Action: timer cancelled"
