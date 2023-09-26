@@ -1,0 +1,153 @@
+blueprint:
+  name: '"Binary sensor"-activated Light with Timer and Condition'
+  description: 'Turn on a light when binary sensor is "true" and turn it off when "cooldown" timer finishes on specific condifion'
+  domain: automation
+  source_url: https://github.com/DmitriySafronov/home-assistant_blueprints/blob/master/automation/binary_light_timer_condition.yaml
+  input:
+    entity_trigger:
+      name: Binary Sensor
+      selector:
+        entity:
+          domain: binary_sensor
+          multiple: false
+    entity_condition:
+      name: Condition
+      selector:
+        entity:
+          domain:
+            - binary_sensor
+            - input_boolean
+          multiple: false
+    entity_target:
+      name: Light
+      selector:
+        entity:
+          domain: light
+          multiple: false
+    timer_cooldown:
+      name: Wait timer
+      description: 'Time to leave the light on after binary sensor becomes "false"'
+      selector:
+        entity:
+          domain: timer
+          multiple: false
+
+# If motion is detected within the delay,
+# we restart the script.
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: !input timer_cooldown
+    id: timer
+  - platform: state
+    entity_id:
+      - !input entity_trigger
+    id: motion
+  - platform: state
+    entity_id:
+      - !input entity_target
+    id: light
+
+condition:
+  - condition: state
+    entity_id: !input entity_condition
+    state: "on"
+
+action:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: timer
+        sequence:
+          - service: light.turn_off
+            target:
+              entity_id: !input entity_target
+          - service: logbook.log
+            data_template:
+              name: "Blueprint #"
+              message: "Condition: trigger - timer finished; Action: light turned off"
+      - conditions:
+          - condition: trigger
+            id: motion
+          - condition: state
+            entity_id: !input entity_trigger
+            state: "on"
+          - condition: state
+            entity_id: !input entity_target
+            state: "off"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input entity_target
+          - service: logbook.log
+            data_template:
+              name: "Blueprint #"
+              message: "Condition: trigger - binary sensor is true at dark; Action: light turned on."
+      - conditions:
+          - condition: trigger
+            id: motion
+          - condition: state
+            entity_id: !input entity_trigger
+            state: "on"
+          - condition: state
+            entity_id: !input entity_target
+            state: "on"
+        sequence:
+          - service: timer.cancel
+            target:
+              entity_id: !input timer_cooldown
+          - service: logbook.log
+            data_template:
+              name: "Blueprint #"
+              message: "Condition: trigger - binary sensor is true at light; Action: timer cancelled."
+      - conditions:
+          - condition: trigger
+            id: motion
+          - condition: state
+            entity_id: !input entity_trigger
+            state: "off"
+          - condition: state
+            entity_id: !input entity_target
+            state: "on"
+        sequence:
+          - service: timer.start
+            target:
+              entity_id: !input timer_cooldown
+          - service: logbook.log
+            data_template:
+              name: "Blueprint #"
+              message: "Condition: trigger - binary sensor is false at light; Action: timer started."
+      - conditions:
+          - condition: trigger
+            id: light
+          - condition: state
+            entity_id: !input entity_target
+            state: "on"
+          - condition: template
+            value_template: "{{ trigger.to_state.context.parent_id == none }}"
+        sequence:
+          - service: timer.start
+            target:
+              entity_id: !input timer_cooldown
+          - service: logbook.log
+            data_template:
+              name: "Blueprint #"
+              message: "Condition: trigger - light started manually; Action: timer started."
+      - conditions:
+          - condition: trigger
+            id: light
+          - condition: state
+            entity_id: !input entity_target
+            state: "off"
+        sequence:
+          - service: timer.cancel
+            target:
+              entity_id: !input timer_cooldown
+          - service: logbook.log
+            data_template:
+              name: "Blueprint #"
+              message: "Condition: trigger - light stopped; Action: timer cancelled"
