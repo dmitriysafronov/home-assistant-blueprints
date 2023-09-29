@@ -11,12 +11,12 @@ blueprint:
           domain: binary_sensor
           device_class: motion
           multiple: false
-    entity_occupancy:
-      name: Occupancy Sensor
+    entity_presence:
+      name: Presence Sensor
       selector:
         entity:
           domain: binary_sensor
-          device_class: occupancy
+          device_class: presence
           multiple: false
     entity_illuminance:
       name: Illuminance Sensor
@@ -74,8 +74,8 @@ trigger:
     id: light
   - platform: state
     entity_id:
-      - !input entity_occupancy
-    id: occupancy
+      - !input entity_presence
+    id: presence
 
 condition:
   - condition: state
@@ -133,7 +133,7 @@ action:
             entity_id: !input entity_target
             state: "on"
           - condition: state
-            entity_id: !input entity_occupancy
+            entity_id: !input entity_presence
             state: "off"
         sequence:
           - service: timer.start
@@ -146,7 +146,7 @@ action:
             entity_id: !input entity_target
             state: "on"
           - condition: state
-            entity_id: !input entity_occupancy
+            entity_id: !input entity_presence
             state: "off"
           - condition: template
             value_template: "{{ trigger.to_state.context.parent_id == none }}"
@@ -169,9 +169,9 @@ action:
               entity_id: !input timer_no_motion
       - conditions:
           - condition: trigger
-            id: occupancy
+            id: presence
           - condition: state
-            entity_id: !input entity_occupancy
+            entity_id: !input entity_presence
             state: "on"
           - condition: state
             entity_id: !input entity_target
@@ -185,9 +185,9 @@ action:
               entity_id: !input timer_no_motion
       - conditions:
           - condition: trigger
-            id: occupancy
+            id: presence
           - condition: state
-            entity_id: !input entity_occupancy
+            entity_id: !input entity_presence
             state: "off"
           - condition: state
             entity_id: !input entity_target
