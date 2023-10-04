@@ -20,7 +20,8 @@ blueprint:
       description: Time to leave the light on after last motion is detected.
       selector:
         entity:
-          domain: timer
+          filter:
+            domain: timer
 
 # If motion is detected within the delay,
 # we restart the script.
